@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khjy.zfjd.mapper.PcsMapper">
+
+
+    <resultMap id="personMap" type="com.khjy.zfjd.model.PersonsInvoled">
+        <result property="name" column="name"/>
+        <result property="idcardno" column="idcardno"/>
+        <result property="suspectcode" column="suspectcode"/>
+        <result property="gender" column="gender"/>
+        <result property="birthday" column="birthday"/>
+        <result property="entertime" column="entertime"/>
+        <result property="casename" column="casename"/>
+        <result property="orgname" column="orgname"/>
+    </resultMap>
+
+    <sql id="colo">
+         p.NAME,P.IDCARDNO,P.SUSPECTCODE,(case P.GENDER when '1' then '男' when '2' then '女' else '其他' end) as gender,P.BIRTHDAY,P.ENTERTIME,c.CASENAME,g.orgname
+    </sql>
+
+    <select id="getZydata" resultMap="personMap" parameterType="java.lang.String">
+        SELECT
+        <include refid="colo"/>
+        FROM
+        tzzf.PERSONS_INVOLED p , XT.ORG_INFO g , tzzf.CASE_INFO c where p.PROCESS_DEPTID = g.orgid and p.CASEID = c.CASEID
+        AND p.PERSONSTATUS NOT IN ( '0', '8', '9' ) and p.PERSONSTATUS is not null
+        AND p.isdel = '0'
+        <if test="badw != null and badw != ''">
+            AND P.PROCESS_DEPTID = #{badw}
+        </if>
+        <if test="kssj != null and kssj != '' and jssj != null and jssj != ''">
+            AND P.ENTERTIME BETWEEN CONCAT(#{kssj},' 00:00:00') AND CONCAT(#{jssj},' 23:59:59')
+        </if>
+        ORDER BY P.ENTERTIME DESC
+    </select>
+
+
+    <select id="getYjdata" resultMap="personMap" parameterType="java.lang.String">
+        SELECT
+        <include refid="colo"/>
+        FROM
+        tzzf.PERSONS_INVOLED p , XT.ORG_INFO g , tzzf.CASE_INFO c where p.PROCESS_DEPTID = g.orgid and p.CASEID = c.CASEID
+        AND p.PERSONSTATUS NOT IN ( '0', '8', '9' ) and p.PERSONSTATUS is not null
+        AND p.isdel = '0'
+        AND to_date ( P.ENTERTIME, 'yyyy-mm-dd,hh24:mi:ss' ) + numtodsinterval ( 24, 'hour' )  &lt; sysdate
+
+        <if test="badw != null and badw != ''">
+            AND P.PROCESS_DEPTID = #{badw}
+        </if>
+        <if test="kssj != null and kssj != '' and jssj != null and jssj != ''">
+            AND P.ENTERTIME BETWEEN CONCAT(#{kssj},' 00:00:00') AND CONCAT(#{jssj},' 23:59:59')
+        </if>
+
+        ORDER BY P.ENTERTIME DESC
+
+    </select>
+
+
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khjy.zfjd.system.dao.TSLogDao">
+
+
+
+    <select id="findAll" resultType="com.khjy.zfjd.system.bean.TSLog" parameterType="java.lang.String">
+        select * from t_s_log where 1=1
+
+
+
+        <!--<if test="kssj != null and kssj != '' and jssj != null and jssj != ''">
+            and OPTIME between to_date(concat(#{kssj},' 00:00:00'),'yyyy/MM/dd hh24:mi:ss') and to_date(concat(#{jssj},' 23:59:59 '),'yyyy/MM/dd hh24:mi:ss')
+
+        </if>-->
+
+    </select>
+    <insert id="insert">
+        insert into t_s_log (ID,OPERATOR,OPTIME,OPTYPE,OPTLX,URL)
+        VALUES  (sys_guid(),#{operator},#{optime},#{optype},#{optlx},#{url})
+
+    </insert>
+
+
+
+</mapper>

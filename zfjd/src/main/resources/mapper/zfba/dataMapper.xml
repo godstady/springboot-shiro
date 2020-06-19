@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khjy.zfjd.mapper.DataMapper">
+
+
+    <resultMap id="datamap" type="com.khjy.zfjd.model.Data">
+        <result property="ajbh" column="ajbh"/>
+        <result property="ajmc" column="ajmc"/>
+        <result property="rybh" column="rybh"/>
+        <result property="rymc" column="rymc"/>
+        <result property="ajlx" column="ajlx"/>
+        <result property="bamj" column="bamj"/>
+        <result property="badw" column="badw"/>
+        <result property="ajxq" column="ajxq"/>
+    </resultMap>
+
+
+    <select id="getData" resultMap="datamap" parameterType="java.lang.String">
+        select * from zfba_bd where 1=1
+
+        <if test="badw != null and badw != ''">
+            and badw = #{badw}
+        </if>
+        <if test="kssj != null and kssj != '' and jssj != null and jssj != ''">
+            and (select time + 0 from dual) between to_date(#{kssj},'yyyy/MM/dd hh24:mi:ss') and to_date(#{jssj},'yyyy/MM/dd hh24:mi:ss')
+        </if>
+        order by time desc
+    </select>
+
+
+    <select id="getRyxxById" parameterType="java.lang.String" resultType="com.khjy.zfjd.model.Ryxx">
+        select
+        ID,
+        RYBH,
+        RYXM,
+        XB,
+        TO_CHAR((SELECT CSRQ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS CSRQ,
+        AGE,
+        WHCD,
+        RYSF,
+        ZZMM,
+        MZ,
+        GJ,
+        GZDW,
+        HJD_XZQH,
+        HJDXZ,
+        XZD_XZQH,
+        XZDXZ,
+        LRDW_BH,
+        LRR_SFZH,
+        TO_CHAR((SELECT LRSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS LRSJ,
+        ZPID,
+        TO_CHAR((SELECT ZHRQ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS ZHRQ,
+        ZHDWID,
+        RY_ZAYBH,
+        QTAYBH,
+        CBR_JH,
+        AJBH,
+        ISDEL,
+        ZJHM
+        from SJJH_WA_RYXX where LRDW_BH like '110107%' AND ISDEL = 0
+        <if test="serchKey != '' and serchKey == 'rybh'">
+            and rybh = #{serchValue}
+        </if>
+        <if test="serchKey != '' and serchKey == 'zjhm'">
+            and zjhm = #{serchValue}
+        </if>
+    </select>
+    
+    <select id="getWpxxById" parameterType="java.lang.String" resultType="com.khjy.zfjd.model.SjjhWaWpxx">
+        SELECT
+        ID,
+        SAWPPMID
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '组织机构' AND CODE = ZBDWBH) AS ZBDWBH
+        ,WPBH
+        ,MC
+        ,WPLB
+        ,AJBH
+        ,SL
+        ,LONG_TO_CHAR ( ROWID, 'SJJH_WA_WPXX', 'TZ' ) AS TZ
+        ,TO_CHAR((SELECT LRSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS LRSJ
+        ,ZT
+        ,RKLX
+        ,CFWZMC
+        ,TO_CHAR((SELECT RKSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS RKSJ
+        ,TO_CHAR((SELECT CKSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS CKSJ
+        ,LRR_JH
+        ,ISDEL
+        from SJJH_WA_WPXX where isdel = 0 and ZBDWBH like '110107%' and ajbh in (
+            select ajbh from SJJH_WA_RYXX where isdel = 0
+            <if test="serchKey != '' and serchKey == 'rybh'">
+                and rybh = #{serchValue}
+            </if>
+            <if test="serchKey != '' and serchKey == 'zjhm'">
+                and zjhm = #{serchValue}
+            </if>
+        )
+    </select>
+
+
+    <select id="getJqxxById" parameterType="java.lang.String" resultType="com.khjy.zfjd.model.SjjhWaJqxx">
+        select
+        ID
+        ,AJBH
+        ,JQBH
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '案件类型' AND CODE = AJLX) AS AJLX
+        ,TO_CHAR((SELECT LRSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS LRSJ
+        ,JBDH
+        ,BJDH
+        ,CJRY
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '组织机构' AND CODE = CBDW_BH) AS CBDW_BH
+        ,CBR_SFZH
+        ,CBR_XM
+        ,CLJG
+        ,JJDH
+        ,TO_CHAR((SELECT JBSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS JBSJ
+        ,TO_CHAR((SELECT ASJFSSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS ASJFSSJ
+        ,TO_CHAR((SELECT ASJJSSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS ASJJSSJ
+        ,JQDD_XZQH
+        ,JQDD
+        ,LONG_TO_CHAR ( ROWID, 'SJJH_WA_JQXX', 'BJNR' ) AS BJNR
+        ,CBR_JH
+        ,ISDEL
+        from SJJH_WA_JQXX where isdel = 0 and CBDW_BH like '110107%' and ajbh in (
+            select ajbh from SJJH_WA_RYXX where isdel = 0
+            <if test="serchKey != '' and serchKey == 'rybh'">
+                and rybh = #{serchValue}
+            </if>
+            <if test="serchKey != '' and serchKey == 'zjhm'">
+                and zjhm = #{serchValue}
+            </if>
+        )
+    </select>
+
+    <select id="getRyclById" resultType="com.khjy.zfjd.model.SjjhWaRyclxx" parameterType="java.lang.String">
+        select
+        ID
+        ,RYBH
+        ,CLJDBH
+        ,TO_CHAR((SELECT PZSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS PZSJ
+        ,SFSC
+        ,CBR_JH
+        ,CQRDWBH
+        ,ISDEL
+        ,RY_SFZH
+        from SJJH_WA_RYCLXX where isdel = 0
+        <if test="serchKey != '' and serchKey == 'rybh'">
+            and rybh = #{serchValue}
+        </if>
+        <if test="serchKey != '' and serchKey == 'zjhm'">
+            and RY_SFZH = #{serchValue}
+        </if>
+    </select>
+
+    <select id="getAjxxById" resultType="com.khjy.zfjd.model.Ajxx" parameterType="java.lang.String">
+        select
+        ID
+        ,AJBH
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '案件环节' AND CODE = AJHJ) AS AJHJ
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '案件来源' AND CODE = AJLY) AS AJLY
+        ,AJMC
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '案件性质' AND CODE = AJXZ) AS AJXZ
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '组织机构' AND CODE = ZBDW_BH) AS ZBDW_BH
+        ,ZBR_XM
+        ,ZBR_SFZH
+        ,FADDXZ
+        ,TO_CHAR((SELECT FASJXX + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS FASJXX
+        ,TO_CHAR((SELECT FASJSX + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS FASJSX
+        ,TO_CHAR((SELECT FXSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS FXSJ
+        ,GKZT
+        ,RYLB
+        ,LONG_TO_CHAR ( ROWID, 'SJJH_WA_AJXX', 'jyaq' ) AS JYAQ
+        ,TO_CHAR((SELECT LARQ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS LARQ
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '组织机构' AND CODE = LRDW_BH) AS LRDW_BH
+        ,LRR_SFZH
+        ,TO_CHAR((SELECT LRSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS LRSJ
+        ,TO_CHAR((SELECT SLSJ + 0 FROM DUAL),'yyyy-MM-dd hh24:mi:ss') AS SLSJ
+        ,XBDW
+        ,XBMJ
+        ,ZABBH
+        ,CBR_JH
+        ,ISDEL
+        ,(SELECT NAME FROM CODE WHERE DIC_NAME = '案件类型' AND CODE = AJLX) AS AJLX
+        from SJJH_WA_AJXX  where isdel = 0 and LRDW_BH like '110107%' and ajbh in (
+            select ajbh from SJJH_WA_RYXX where isdel = 0
+            <if test="serchKey != '' and serchKey == 'rybh'">
+                and rybh = #{serchValue}
+            </if>
+            <if test="serchKey != '' and serchKey == 'zjhm'">
+                and zjhm = #{serchValue}
+            </if>
+        )
+    </select>
+
+
+</mapper>

@@ -1,0 +1,135 @@
+
+-- 这是创建long转varchar的存储过程 放到市局下发的数据库上
+CREATE OR REPLACE FUNCTION LONG_TO_CHAR(
+       in_rowid rowid,
+       in_table_name varchar,
+       in_column varchar2)
+RETURN varchar AS
+       text_c1 varchar2(32767);
+       sql_cur varchar2(2000);
+begin
+      DBMS_OUTPUT.ENABLE (buffer_size=>null);
+      sql_cur := 'select '||in_column||' from '||in_table_name||' where rowid = '||chr(39)||in_rowid||chr(39);
+      dbms_output.put_line (sql_cur);
+      execute immediate sql_cur into text_c1;
+      text_c1 := substr(text_c1, 1, 4000);
+      RETURN TEXT_C1;
+END;
+
+
+
+-- 这是创建dblink的语句，连接办案中心的数据进行对比（要创建两个，一个是tzzf，一个是xt，因为要去xt里边查组织信息）创建到市局下发的数据库
+create database link bazx_tzzf
+ connect to tzzf identified by tzzf
+  using '(DESCRIPTION =(ADDRESS_LIST =(ADDRESS =(PROTOCOL = TCP)(HOST = 14.136.7.204)(PORT = 1521)))(CONNECT_DATA =(SERVICE_NAME = orcl)))'
+
+create database link bazx_xt
+ connect to xt identified by xt
+  using '(DESCRIPTION =(ADDRESS_LIST =(ADDRESS =(PROTOCOL = TCP)(HOST = 14.136.7.204)(PORT = 1521)))(CONNECT_DATA =(SERVICE_NAME = orcl)))'
+
+
+
+-- 这是创建比对视图的语句，后期要把dblink用上,放到市局下发的数据库上
+CREATE OR REPLACE VIEW ZFBA_BD AS
+SELECT
+  distinct a.ajbh AS ajbh,
+  a.ajmc AS ajmc,
+  r.rybh AS rybh,
+  r.ryxm AS rymc,
+  ( CASE a.ajlx WHEN '01' THEN '刑事' WHEN '02' THEN '行政' ELSE '其他' END ) AS ajlx,
+  a.zbr_xm AS bamj,
+  ( SELECT orgname FROM ORG_INFO@BAZX_XT WHERE orgno = a.zbdw_bh ) AS badw,
+  ( SELECT LONG_TO_CHAR ( ROWID, 'SJJH_WA_AJXX', 'jyaq' ) FROM SJJH_WA_AJXX WHERE ajbh = a.ajbh and rownum = 1) AS ajxq ,
+  r.lrsj as time
+FROM
+  SJJH_WA_RYXX r
+
+  INNER JOIN SJJH_WA_AJXX a ON r.ajbh = a.ajbh
+WHERE
+-- zhiyuzhei
+  a.isdel = 0 and a.zbdw_bh like '110107%'
+  AND r.isdel = 0
+  AND a.ajlx = '01'
+  AND r.rybh NOT IN ( SELECT SUSPECTCODE FROM PERSONS_INVOLED@BAZX_TZZF WHERE isdel = 0 AND SUSPECTCODE IS NOT NULL )
+
+  UNION ALL
+
+SELECT
+  distinct a.ajbh AS ajbh,
+  a.ajmc AS ajmc,
+  r.rybh AS rybh,
+  r.ryxm AS rymc,
+  ( CASE a.ajlx WHEN '01' THEN '刑事' WHEN '02' THEN '行政' ELSE '其他' END ) AS ajlx,
+  a.zbr_xm AS bamj,
+  ( SELECT orgname FROM ORG_INFO@BAZX_XT WHERE orgno = a.zbdw_bh ) AS badw,
+  ( SELECT LONG_TO_CHAR ( ROWID, 'SJJH_WA_AJXX', 'jyaq' ) FROM SJJH_WA_AJXX WHERE ajbh = a.ajbh and rownum = 1) AS ajxq ,
+  r.lrsj as time
+FROM
+  SJJH_WA_RYXX r
+  INNER JOIN SJJH_WA_AJXX a ON r.ajbh = a.ajbh
+WHERE
+-- zhiyuzhei
+  a.isdel = 0 and a.zbdw_bh like '110107%'
+  AND r.isdel = 0
+  AND a.ajlx = '02'
+  AND ( SELECT LONG_TO_CHAR ( ROWID, 'SJJH_WA_AJXX', 'jyaq' ) FROM SJJH_WA_AJXX WHERE ajbh = a.ajbh and rownum = 1) LIKE '%嫖娼%'
+  AND ( SELECT LONG_TO_CHAR ( ROWID, 'SJJH_WA_AJXX', 'jyaq' ) FROM SJJH_WA_AJXX WHERE ajbh = a.ajbh and rownum = 1) LIKE '%卖淫%'
+  AND r.rybh NOT IN ( SELECT SUSPECTCODE FROM PERSONS_INVOLED@BAZX_TZZF WHERE isdel = 0 AND SUSPECTCODE IS NOT NULL );
+
+
+-- 创建已回传的数据视图，通过视图筛选出某个分局的数据，放到办案中心的数据库，也要建一个dblink，链接市局回传数据库
+	create database link bazx_zfba
+     connect to bazx identified by bazx
+      using '(DESCRIPTION =(ADDRESS_LIST =(ADDRESS =(PROTOCOL = TCP)(HOST = 14.27.137.140)(PORT = 1521)))(CONNECT_DATA =(SERVICE_NAME = zfbasync)))'
+
+
+
+
+
+
+     create view RYGJ_SJHC as  SELECT "ID","ISDEL","ZBDW_BH","ZBDW_MC","ZBR_XM","LRR_SFZH","LRSJ","XGSJ","RYBH","XM","BAQID","BAQMC","QYMC","KSSJ","JSSJ" FROM BAZX_RYGJ@BAZX_ZFBA WHERE BAQMC = '石景山分局执法办案中心'
+
+
+     create view  ryxx_sjhc as	select "ID","ISDEL","ZBDW_BH","ZBDW_MC","MJ_XM","LRR_SFZH","LRSJ","XGSJ","BAQID","BAQMC","RYLX","RYBH","RYXM","ZJLX","RY_SFZH","XB","MZ","CSRQ","NL","HJDXZ","GJ","WHCD","ZZMM","FLSXKSSJ","FLSXJSSJ","DAFS","R_RSSJ","RY_ZAYBH","C_RYQX","C_CSSJ","SFYWP","SFTSQT","TSQT","RYZT","AQJCKSSJ","AQJCJSSJ","JQBH","AJBH","R_YZJB","R_SSMS","TSSF","TSQKSM","JCLX","JCR","TBTZ","QTQK","DLCQMJ","WGL" from BAZX_BAQRYXX@BAZX_ZFBA where baqmc = '石景山分局执法办案中心'
+
+
+     create view sswp_sjhc as	select "ID","ISDEL","RYBH","ZBDW_BH","ZBDW_MC","ZBR_XM","ZBR_SFZH","LRSJ","XGSJ","BAQID","BAQMC","WPBH","LX","LB","MC","CYR","DW","SL","JZ","WPZT","TZ","CFWZ","CLLX","LQR" from BAZX_SSWP@BAZX_ZFBA where baqmc = '石景山分局执法办案中心'
+
+
+-- 警综视频数据库
+    用JZDB_FZYSP 用户登录，表名用XRAPUSER用户
+
+create database link bazx_jzsp
+     connect to JZDB_FZYSP identified by JZDB_FZYSP
+      using '(DESCRIPTION =(ADDRESS_LIST =(ADDRESS =(PROTOCOL = TCP)(HOST = 14.27.64.4)(PORT = 1521)))(CONNECT_DATA =(SERVICE_NAME = bjjzdb)))'
+
+create view fzysp_glfkb as select ID,
+                                  AJBH,
+                                  JQBH,
+                                  RYBH,
+                                  SPBH,
+                                  SPID,
+                                  CJR,
+                                  SPKSSJ,
+                                  SPJSSJ,
+                                  SPCXSJ,
+                                  SPPSDD,
+                                  SPSSDW,
+                                  (case spbs when '11' then '执法视频' when '12' then '入区视频' when '13' then '笔录视频' when '14' then '押解录像' when '15' then '搜查或检查录像' when '16' then '辨认录像' when '17' then '讯问录像' when '20' then '其他录像' end) as SPBS,
+                                  RYSPFL,
+                                  SCDW,
+                                  SCSJ,
+                                  JCJBH,
+                                  SPSC,
+                                  JQ_JBSJ,
+                                  AJ_SLSJ,
+                                  SJ_JBSJ,
+                                  RY_LRSJ
+ from XRAPUSER.fzysp_glfkb@bazx_jzsp where scdw = '石景山分局'
+
+
+系统部署需要注意
+    将以上的东西建好之后，修改配置文件各自的数据库链接。
+    然后程序中1.已经回传页面中开始时间、结束时间查询，后台的日期需要处理下。
+             2.比对页面中的开始时间、结束时间也需要调试一下后台
+             3.视图中的表需要和dblink连起来

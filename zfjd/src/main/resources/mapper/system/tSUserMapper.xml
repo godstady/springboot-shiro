@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khjy.zfjd.system.dao.TSUserDao">
+
+     <select id="findAll" resultType="com.khjy.zfjd.system.bean.TSUser">
+         select * from t_s_user
+
+     </select>
+
+    <select id="getUser" parameterType="java.lang.String" resultType="com.khjy.zfjd.system.bean.TSUser">
+        select * from t_s_user where userno  = #{id}
+        <!--<where>
+            <if test="id != null and id != ''">
+                id = #{id}
+            </if>
+            <if test="username != null and username != ''">
+                username = #{username}
+            </if>
+            <if test="userno != null and userno != ''">
+                userno = #{userno}
+            </if>
+            <if test="usercode != null and usercode != ''">
+                usercode = #{usercode}
+            </if>
+        </where>-->
+
+    </select>
+
+    <select id="getrole" parameterType="java.lang.String" resultType="java.lang.String" >
+        select roleid from t_s_role_user ru where ru.userid = (select  t.id  from T_S_USER t where USERNO= #{userno})
+
+    </select>
+
+    <select id="getfun" parameterType="java.lang.String" resultType="com.khjy.zfjd.system.bean.TSFunction"  >
+        select * from t_s_function where id in ( select functionid from t_s_Role_Function where roleid  in <foreach collection="rolist" item="roid" index="index"
+                                                                                                              open="(" close=")" separator=",">
+        #{roid}
+    </foreach> )
+
+    </select>
+
+
+</mapper>

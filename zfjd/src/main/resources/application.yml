@@ -1,0 +1,46 @@
+server:
+  port: 8088
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+spring:
+#  cache:
+#    type: ehcache
+#    ehcache:
+#      config: classpath:/config/ehcache.xml
+  datasource:
+    dynamic:
+      primary: sysur
+      strict: false
+      datasource:
+       sysur:
+                driver-class-name: oracle.jdbc.driver.OracleDriver
+                url: jdbc:oracle:thin:@127.0.0.1:1521:orclone
+                username: sysur
+                password: sysur
+#        bazx:
+#          driver-class-name: oracle.jdbc.driver.OracleDriver
+#          url: jdbc:oracle:thin:@127.0.0.1:1521:orcl
+#          username: tzzf
+#          password: tzzf
+#        zfba:
+#          driver-class-name: oracle.jdbc.driver.OracleDriver
+#          url: jdbc:oracle:thin:@127.0.0.1:1521:orcl
+#          username: tzlog
+#          password: tzlog
+#        pcs:
+#          driver-class-name: oracle.jdbc.driver.OracleDriver
+#          url: jdbc:oracle:thin:@192.168.1.194:1521:syjcsd
+#          username: TZZF
+#          password: TZZF
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: utf-8
+    mode: LEGACYHTML5
+
+

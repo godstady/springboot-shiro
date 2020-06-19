@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khjy.zfjd.mapper.SjhcMapper">
+
+     <select id="getList" resultType="com.khjy.zfjd.model.BazxBaqryxx" parameterType="java.lang.String">
+          select * from RYXX_SJHC where 1=1
+
+          <if test="badw != null and badw != ''">
+              and zbdw_bh = #{badw}
+          </if>
+
+         <if test="kssj != null and kssj != '' and jssj != null and jssj != ''">
+             and (select r_rssj+0 from dual) between to_date(concat(#{kssj},' 00:00:00'),'yyyy/MM/dd hh24:mi:ss') and to_date(concat(#{jssj},' 23:59:59 '),'yyyy/MM/dd hh24:mi:ss')
+
+         </if>
+
+     </select>
+
+    <select id="getSswp" resultType="com.khjy.zfjd.model.BazxSswp" parameterType="java.lang.String">
+        select * from sswp_sjhc
+        <where>
+            <if test="rybh != null and rybh != ''">
+                rybh = #{rybh}
+            </if>
+        </where>
+    </select>
+
+    <select id="getRygj" parameterType="java.lang.String" resultType="com.khjy.zfjd.model.BazxRygj">
+        select * from rygj_sjhc
+        <where>
+            <if test="rybh != null and rybh != ''">
+                rybh = #{rybh}
+            </if>
+        </where>
+
+    </select>
+
+
+</mapper>

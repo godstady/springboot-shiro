@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.khjy.zfjd.mapper.PersonMapper">
+
+
+    <resultMap id="datamap" type="com.khjy.zfjd.model.Data">
+        <result property="ajbh" column="ajbh"/>
+        <result property="ajmc" column="ajmc"/>
+        <result property="rybh" column="rybh"/>
+        <result property="rymc" column="rymc"/>
+        <result property="ajlx" column="ajlx"/>
+        <result property="bamj" column="bamj"/>
+        <result property="badw" column="badw"/>
+        <result property="ajxq" column="ajxq"/>
+    </resultMap>
+
+    <sql id="coloum">
+        a.casecode as ajbh,a.casename as ajmc,r.SUSPECTCODE as rybh,r.name as rymc,a.CASETYPE as ajlx,a.PROCESSER as bamj,r.PROCESS_DEPTID as badw,a.CASEBRIEF as ajxq
+    </sql>
+
+
+   <!-- <select id="getPerson" resultMap="datamap" parameterType="java.lang.String">
+        select
+        <include refid="coloum"></include>
+        from PERSONS_INVOLED r left join CASE_INFO a on r.CASECODE = a.CASECODE where a.isdel = 0 and r.isdel = 0
+        <if test="badw != null">
+            and r.PROCESS_DEPTID = #{badw}
+        </if>
+    </select>-->
+
+    <select id="getBadw" resultType="com.khjy.zfjd.model.Code">
+        select orgname,orgno,orgid from xt.org_info
+    </select>
+
+    <select id="getBadwid" resultType="java.lang.String" parameterType="java.lang.String">
+        select orgid from xt.org_info where
+
+            <if test="orgno != null and orgno != ''">
+                orgno = #{orgno} and
+            </if>
+
+        rownum = 1
+    </select>
+
+</mapper>
